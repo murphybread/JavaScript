@@ -12,7 +12,7 @@ function readFiles(dir, filelist = []) {
         const stat = fs.statSync(filepath);
         if (stat.isDirectory()) {
             filelist = readFiles(filepath, filelist);
-        } else if (filepath.endsWith('.js')) {
+        } else if (filepath.endsWith('.js') || filepath.endsWith('.ts')) {
             filelist.push(filepath);
         }
     });
@@ -24,38 +24,58 @@ function extractVariables(filepath) {
     const code = fs.readFileSync(filepath, 'utf-8');
     const lines = code.split('\n');
 
+    let currentClass = null;
+    let currentFunction = null;
     let variables = [];
+
     lines.forEach((line, index) => {
         const trimmedLine = line.trim();
-
-        // 변수 선언 추출
-        if (trimmedLine.startsWith('let ') || trimmedLine.startsWith('const ') || trimmedLine.startsWith('var ')) {
-            const variableName = trimmedLine.split(/[ =;]/)[1];
-            variables.push({
-                type: 'variable',
-                name: variableName,
-                line: index + 1
-            });
-        }
-
-        // 함수 선언 추출
-        if (trimmedLine.startsWith('function ')) {
-            const functionName = trimmedLine.split(/[ (]/)[1];
-            variables.push({
-                type: 'function',
-                name: functionName,
-                line: index + 1
-            });
-        }
 
         // 클래스 선언 추출
         if (trimmedLine.startsWith('class ')) {
             const className = trimmedLine.split(' ')[1];
-            variables.push({
+            currentClass = {
                 type: 'class',
                 name: className,
+                line: index + 1,
+                functions: [],
+                variables: []
+            };
+            variables.push(currentClass);
+            currentFunction = null; // 클래스가 시작되면 현재 함수 초기화
+        }
+        // 함수 선언 추출
+        else if (trimmedLine.startsWith('function ') || (currentClass && trimmedLine.startsWith(currentClass.name + '.prototype.'))) {
+            const functionName = trimmedLine.split(/[ (]/)[1];
+            currentFunction = {
+                type: 'function',
+                name: functionName,
+                line: index + 1,
+                variables: []
+            };
+            if (currentClass) {
+                currentClass.functions.push(currentFunction);
+            } else {
+                variables.push(currentFunction);
+            }
+        }
+        // 변수 선언 추출
+        else if (trimmedLine.startsWith('let ') || trimmedLine.startsWith('const ') || trimmedLine.startsWith('var ')) {
+            const parts = trimmedLine.split(/[ =;]/);
+            const variableName = parts[1];
+            const variableType = parts[0]; // 'let', 'const', 'var'
+            const variable = {
+                type: variableType,
+                name: variableName,
                 line: index + 1
-            });
+            };
+            if (currentFunction) {
+                currentFunction.variables.push(variable);
+            } else if (currentClass) {
+                currentClass.variables.push(variable);
+            } else {
+                variables.push(variable);
+            }
         }
     });
 
@@ -71,7 +91,25 @@ function generateVariableSpecification() {
         const variables = extractVariables(filepath);
         specifications += `File: ${filepath}\n`;
         variables.forEach(variable => {
-            specifications += `  - ${variable.type} ${variable.name} (line ${variable.line})\n`;
+            if (variable.type === 'class') {
+                specifications += `  - class ${variable.name} (line ${variable.line})\n`;
+                variable.variables.forEach(v => {
+                    specifications += `    - ${v.type} ${v.name} (line ${v.line})\n`;
+                });
+                variable.functions.forEach(f => {
+                    specifications += `    - function ${f.name} (line ${f.line})\n`;
+                    f.variables.forEach(v => {
+                        specifications += `      - ${v.type} ${v.name} (line ${v.line})\n`;
+                    });
+                });
+            } else if (variable.type === 'function') {
+                specifications += `  - function ${variable.name} (line ${variable.line})\n`;
+                variable.variables.forEach(v => {
+                    specifications += `    - ${v.type} ${v.name} (line ${v.line})\n`;
+                });
+            } else {
+                specifications += `  - ${variable.type} ${variable.name} (line ${variable.line})\n`;
+            }
         });
         specifications += '\n';
     });

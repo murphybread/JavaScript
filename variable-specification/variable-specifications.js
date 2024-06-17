@@ -62,7 +62,7 @@ function extractVariables(filepath) {
     return variables;
 }
 
-// 모든 파일의 변수 명세서를 작성합니다.
+// 모든 파일의 변수 명세서를 단일 파일로 작성합니다.
 function generateVariableSpecification() {
     const files = readFiles(srcDir);
     let specifications = '';

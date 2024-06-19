@@ -1,19 +1,26 @@
 {
   "name": "murphybread",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This is Custom Pacakage created by Murphy. Several modules are updated. For example, a commit convention rule file, a module to extract classes and variables into a single file, and more.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "node postinstall.js"
   },
+  "files": [
+    "index.js",
+    "commit-convention/",
+    "variable-specification/"
+  ],
+  "keywords": [
+    "commit",
+    "convention",
+    "variable",
+    "specification"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/murphybread/JavaScript.git"
+    "url": "git+https://github.com/yourusername/my-package.git"
   },
-  "author": "murphybread",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/murphybread/JavaScript/issues"
-  },
-  "homepage": "https://github.com/murphybread/JavaScript#readme"
+  "author": "Murphybread",
+  "license": "MIT"
 }

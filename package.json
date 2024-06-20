@@ -1,6 +1,6 @@
 {
   "name": "murphybread",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "This is Custom Pacakage created by Murphy. Several modules are updated. For example, a commit convention rule file, a module to extract classes and variables into a single file, and more.",
   "main": "index.js",
   "scripts": {
@@ -8,6 +8,7 @@
   },
   "files": [
     "index.js",
+    "postinstall.js",
     "commit-convention/",
     "variable-specification/"
   ],
